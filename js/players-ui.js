@@ -86,12 +86,16 @@ function closePlayerModal() {
   editingPlayerId = null;
 }
 
-function renderModesGrid(containerId, modesList, modesObj) {
+function renderModesGrid(containerId, modesList, modesObj, schema) {
+  const fieldA = schema ? schema.fieldA : "wins";
+  const fieldB = schema ? schema.fieldB : "losses";
+  const labelA = schema ? schema.labelA : "Wins";
+  const labelB = schema ? schema.labelB : "Losses";
   const container = document.getElementById(containerId);
   let html = `
     <div class="mode-header">Mode</div>
-    <div class="mode-header">Wins</div>
-    <div class="mode-header">Losses</div>
+    <div class="mode-header">${labelA}</div>
+    <div class="mode-header">${labelB}</div>
     <div class="mode-header">Win %</div>
   `;
   modesList.forEach((mode) => {
@@ -99,8 +103,8 @@ function renderModesGrid(containerId, modesList, modesObj) {
     const totals = computeTotals({ [mode]: stats }, [mode]);
     html += `
       <div>${MODE_LABELS[mode]}</div>
-      <input type="number" min="0" class="mode-input" data-mode="${mode}" data-field="wins" value="${stats.wins}">
-      <input type="number" min="0" class="mode-input" data-mode="${mode}" data-field="losses" value="${stats.losses}">
+      <input type="number" min="0" class="mode-input" data-mode="${mode}" data-field="${fieldA}" value="${stats[fieldA]}">
+      <input type="number" min="0" class="mode-input" data-mode="${mode}" data-field="${fieldB}" value="${stats[fieldB]}">
       <div class="winrate" data-mode="${mode}">${formatWinPct(totals.winPct)}</div>
     `;
   });
@@ -132,7 +136,15 @@ function renderChamps1Section() {
   const dnp = draftPlayer.champs1.didNotPlay;
   document.getElementById("champs1-content").style.display = dnp ? "none" : "";
   if (!dnp) {
-    renderModesGrid("champs1-modes", CHAMPS_MODES, draftPlayer.champs1.modes);
+    CHAMPS_MODES.forEach((mode) => {
+      normalizeModeStat(draftPlayer.champs1.modes[mode]);
+    });
+    renderModesGrid("champs1-modes", CHAMPS_MODES, draftPlayer.champs1.modes, {
+      fieldA: "played",
+      fieldB: "won",
+      labelA: "Played",
+      labelB: "Won",
+    });
     renderMatchesList();
   }
 }

@@ -44,6 +44,14 @@ function emptyModeStats(modes) {
   return obj;
 }
 
+function emptyModePlayedWon(modes) {
+  const obj = {};
+  modes.forEach((m) => {
+    obj[m] = { played: 0, won: 0 };
+  });
+  return obj;
+}
+
 function emptyModeScores(modes) {
   const obj = {};
   modes.forEach((m) => {
@@ -63,6 +71,29 @@ function normalizeModeScore(scoreObj) {
     scoreObj.won = legacyYou;
   }
   return scoreObj;
+}
+
+// Champs 1 mode totals are entered as "games played" + "games won" too. Old
+// saved data used "wins"/"losses" - back-fill played/won for old players.
+function normalizeModeStat(statObj) {
+  if (statObj.played === undefined || statObj.won === undefined) {
+    const legacyWins = Number(statObj.wins) || 0;
+    const legacyLosses = Number(statObj.losses) || 0;
+    statObj.played = legacyWins + legacyLosses;
+    statObj.won = legacyWins;
+  }
+  return statObj;
+}
+
+// Reads a mode stat as {wins, losses} regardless of whether it's stored in
+// the old wins/losses shape or the played/won shape.
+function modeStatWinsLosses(stat) {
+  if (stat.played !== undefined || stat.won !== undefined) {
+    const played = Number(stat.played) || 0;
+    const won = Number(stat.won) || 0;
+    return { wins: won, losses: Math.max(0, played - won) };
+  }
+  return { wins: Number(stat.wins) || 0, losses: Number(stat.losses) || 0 };
 }
 
 function createEmptyMatch() {
@@ -86,7 +117,7 @@ function createEmptyPlayer() {
     champs1: {
       didNotPlay: false,
       placement: "",
-      modes: emptyModeStats(CHAMPS_MODES),
+      modes: emptyModePlayedWon(CHAMPS_MODES),
       matchHistory: [],
     },
     qualifying: {
@@ -102,8 +133,9 @@ function computeTotals(modesObj, modesList) {
   let losses = 0;
   modesList.forEach((m) => {
     const s = modesObj[m] || { wins: 0, losses: 0 };
-    wins += Number(s.wins) || 0;
-    losses += Number(s.losses) || 0;
+    const wl = modeStatWinsLosses(s);
+    wins += wl.wins;
+    losses += wl.losses;
   });
   const total = wins + losses;
   const winPct = total > 0 ? Math.round((wins / total) * 100) : null;

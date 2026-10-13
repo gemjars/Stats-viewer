@@ -303,8 +303,9 @@ function renderCompareTable() {
     const cells = selected.map((p) => {
       if (p.champs1.didNotPlay) return "—";
       const s = p.champs1.modes[mode];
+      const wl = modeStatWinsLosses(s);
       const t = computeTotals({ [mode]: s }, [mode]);
-      return `${s.wins}-${s.losses} <span style="color:var(--text-dim)">(${formatWinPct(t.winPct)})</span>`;
+      return `${wl.wins}-${wl.losses} <span style="color:var(--text-dim)">(${formatWinPct(t.winPct)})</span>`;
     });
     html += statRow(MODE_LABELS[mode], cells);
   });
