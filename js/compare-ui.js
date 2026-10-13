@@ -197,6 +197,7 @@ function renderCompareCharts(selected) {
       return `
     <div class="chart-card${singleClass}">
       <h4>${escapeHtml(p.name)}${p.pronouns ? `<span class="pronouns">(${escapeHtml(p.pronouns)})</span>` : ""}</h4>
+      ${single ? `<button type="button" class="btn btn-secondary btn-small btn-save-image" data-player-id="${p.id}">Save as Image</button>` : ""}
       <div class="wheel-row">
         <div class="chart-group">
           <h5>Qualifying</h5>
@@ -340,4 +341,115 @@ function setupCompareTab() {
     renderComparePicker();
     renderCompareTable();
   });
+
+  document
+    .getElementById("compare-charts-wrap")
+    .addEventListener("click", (e) => {
+      const btn = e.target.closest(".btn-save-image");
+      if (!btn) return;
+      const player = players.find((p) => p.id === btn.dataset.playerId);
+      if (player) exportPlayerImage(player);
+    });
+}
+
+// A4 at 150dpi (close enough for sharp on-screen/print output without being too heavy to render).
+const EXPORT_WIDTH = 1240;
+const EXPORT_HEIGHT = 1754;
+
+function buildExportHtml(p) {
+  const qualiTotals = computeTotals(p.qualifying.modes, QUALI_MODES);
+  const qualiSvg = buildGroupWheelSvg(
+    QUALI_MODES,
+    p.qualifying.modes,
+    CHART_GROUP_COLORS.quali,
+    "Qualifying",
+  );
+  const champsTotals = p.champs1.didNotPlay
+    ? null
+    : computeTotals(p.champs1.modes, CHAMPS_MODES);
+  const champsBlock = p.champs1.didNotPlay
+    ? '<div class="dnp-placeholder">Did not play in Champs 1</div>'
+    : buildGroupWheelSvg(
+        CHAMPS_MODES,
+        p.champs1.modes,
+        CHART_GROUP_COLORS.champs1,
+        "Champs 1",
+      );
+  const matchesSection =
+    !p.champs1.didNotPlay && p.champs1.matchHistory.length
+      ? `<div class="export-match-section">
+          <h2>Champs 1 Match History</h2>
+          ${buildMatchHistoryItemsHtml(p.champs1.matchHistory)}
+        </div>`
+      : "";
+
+  return `
+    <div class="export-header">
+      <h1>${escapeHtml(p.name)}${p.pronouns ? `<span class="export-pronouns"> (${escapeHtml(p.pronouns)})</span>` : ""}</h1>
+      ${p.country ? `<div class="export-info-line">🌍 ${escapeHtml(p.country)}</div>` : ""}
+      ${p.namePronounced ? `<div class="export-info-line">🔊 ${escapeHtml(p.namePronounced)}</div>` : ""}
+    </div>
+    <div class="export-wheel-row">
+      <div class="export-wheel-col">
+        <h2>Qualifying</h2>
+        <div class="export-stat-line">${qualiTotals.wins}W &ndash; ${qualiTotals.losses}L</div>
+        ${p.qualifying.elo ? `<div class="chart-group-placement">Elo: ${escapeHtml(p.qualifying.elo)}</div>` : ""}
+        ${p.qualifying.placement ? `<div class="chart-group-placement">Placement: ${escapeHtml(p.qualifying.placement)}</div>` : ""}
+        ${qualiSvg}
+      </div>
+      <div class="export-wheel-col">
+        <h2>Champs 1</h2>
+        ${champsTotals ? `<div class="export-stat-line">${champsTotals.wins}W &ndash; ${champsTotals.losses}L</div>` : ""}
+        ${champsTotals && p.champs1.placement ? `<div class="chart-group-placement">Placement: ${escapeHtml(p.champs1.placement)}</div>` : ""}
+        ${champsBlock}
+      </div>
+    </div>
+    ${matchesSection}
+    ${p.keyFacts ? `<div class="export-footer"><div class="info-keyfacts">${escapeHtml(p.keyFacts)}</div></div>` : ""}
+  `;
+}
+
+async function exportPlayerImage(player) {
+  if (typeof html2canvas === "undefined") {
+    showToast(
+      "Image export library failed to load. Check your internet connection and try again.",
+      true,
+    );
+    return;
+  }
+
+  const container = document.createElement("div");
+  container.className = "export-page";
+  container.style.width = `${EXPORT_WIDTH}px`;
+  container.style.height = `${EXPORT_HEIGHT}px`;
+  container.style.position = "fixed";
+  container.style.top = "0";
+  container.style.left = "-99999px";
+  container.innerHTML = buildExportHtml(player);
+  document.body.appendChild(container);
+
+  try {
+    const canvas = await html2canvas(container, {
+      backgroundColor: "#ffffff",
+      width: EXPORT_WIDTH,
+      height: EXPORT_HEIGHT,
+      scale: 2,
+    });
+    // A blob: URL is more reliable for triggering a real download than a giant data: URI.
+    const blob = await new Promise((resolve) =>
+      canvas.toBlob(resolve, "image/png"),
+    );
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    const safeName = (player.name || "player").replace(/[^a-z0-9]+/gi, "-");
+    a.download = `${safeName}-stats.png`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (e) {
+    console.error(e);
+    showToast("Could not generate the image.", true);
+  } finally {
+    container.remove();
+  }
 }
