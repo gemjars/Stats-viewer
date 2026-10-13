@@ -373,8 +373,8 @@ main {
 
 .match-modes-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
   font-size: 13px;
 }
 
@@ -393,6 +393,31 @@ main {
 }
 
 .pick-checkbox input { width: auto; }
+
+.score-pair-labeled {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.score-mini-label {
+  display: flex !important;
+  flex-direction: column;
+  font-size: 11px !important;
+  color: var(--text-dim);
+  gap: 2px;
+  margin-bottom: 0 !important;
+}
+
+.score-mini-label input {
+  width: 56px;
+}
+
+.mode-losses-readout {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--text-dim);
+}
 
 .btn-remove-match {
   background: none;

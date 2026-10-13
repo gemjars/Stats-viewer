@@ -49,14 +49,15 @@ function buildMatchHistoryItemsHtml(matches) {
           : m.overallScore.you < m.overallScore.opponent
             ? "match-loss"
             : "";
-      const modeBreakdown = CHAMPS_MODES.filter(
-        (mode) =>
-          m.modeScores[mode].you !== 0 || m.modeScores[mode].opponent !== 0,
-      )
-        .map(
-          (mode) =>
-            `${MODE_LABELS[mode]}${m.modeScores[mode].picked ? ' <span class="pick-tag">Pick</span>' : ""} ${m.modeScores[mode].you}-${m.modeScores[mode].opponent}`,
-        )
+      const modeBreakdown = CHAMPS_MODES.filter((mode) => {
+        const s = normalizeModeScore(m.modeScores[mode]);
+        return s.played !== 0;
+      })
+        .map((mode) => {
+          const s = normalizeModeScore(m.modeScores[mode]);
+          const losses = Math.max(0, s.played - s.won);
+          return `${MODE_LABELS[mode]}${s.picked ? ' <span class="pick-tag">Pick</span>' : ""} ${s.won}-${losses}`;
+        })
         .join(" · ");
       return `
           <div class="compare-match-item ${resultClass}">

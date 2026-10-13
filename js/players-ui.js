@@ -161,22 +161,27 @@ function renderMatchesList() {
         <button type="button" class="btn-remove-match" data-idx="${idx}">Remove</button>
       </div>
       <div class="match-modes-grid">
-        ${CHAMPS_MODES.map(
-          (mode) => `
+        ${CHAMPS_MODES.map((mode) => {
+          const scores = normalizeModeScore(match.modeScores[mode]);
+          return `
           <div>
             <span class="mode-score-label">${MODE_LABELS[mode]}</span>
             <label class="pick-checkbox">
-              <input type="checkbox" class="match-mode-pick" data-match-id="${match.id}" data-mode="${mode}" ${match.modeScores[mode].picked ? "checked" : ""}>
+              <input type="checkbox" class="match-mode-pick" data-match-id="${match.id}" data-mode="${mode}" ${scores.picked ? "checked" : ""}>
               Pick
             </label>
-            <div class="score-pair">
-              <input type="number" min="0" class="match-mode-score" data-match-id="${match.id}" data-mode="${mode}" data-side="you" value="${match.modeScores[mode].you}">
-              <span>-</span>
-              <input type="number" min="0" class="match-mode-score" data-match-id="${match.id}" data-mode="${mode}" data-side="opponent" value="${match.modeScores[mode].opponent}">
+            <div class="score-pair score-pair-labeled">
+              <label class="score-mini-label">Played
+                <input type="number" min="0" class="match-mode-score" data-match-id="${match.id}" data-mode="${mode}" data-field="played" value="${scores.played}">
+              </label>
+              <label class="score-mini-label">Won
+                <input type="number" min="0" class="match-mode-score" data-match-id="${match.id}" data-mode="${mode}" data-field="won" value="${scores.won}">
+              </label>
             </div>
+            <span class="mode-losses-readout" data-match-id="${match.id}" data-mode="${mode}">Losses: ${scores.played - scores.won}</span>
           </div>
-        `,
-        ).join("")}
+        `;
+        }).join("")}
       </div>
     </div>
   `,
@@ -218,8 +223,15 @@ function renderMatchesList() {
   container.querySelectorAll(".match-mode-score").forEach((input) => {
     input.addEventListener("input", () => {
       const match = matches.find((m) => m.id === input.dataset.matchId);
-      match.modeScores[input.dataset.mode][input.dataset.side] =
+      const score = match.modeScores[input.dataset.mode];
+      score[input.dataset.field] =
         input.value === "" ? 0 : Math.max(0, Number(input.value) || 0);
+      const readout = container.querySelector(
+        `.mode-losses-readout[data-match-id="${match.id}"][data-mode="${input.dataset.mode}"]`,
+      );
+      if (readout) {
+        readout.textContent = `Losses: ${Math.max(0, score.played - score.won)}`;
+      }
     });
     input.addEventListener("blur", () => {
       if (input.value === "") input.value = "0";

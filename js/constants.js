@@ -47,9 +47,22 @@ function emptyModeStats(modes) {
 function emptyModeScores(modes) {
   const obj = {};
   modes.forEach((m) => {
-    obj[m] = { you: 0, opponent: 0, picked: false };
+    obj[m] = { played: 0, won: 0, picked: false };
   });
   return obj;
+}
+
+// Match mode scores are entered as "games played" + "games won" (losses are
+// derived). Old saved data used "you"/"opponent" - back-fill played/won from
+// those so existing matches keep showing correctly.
+function normalizeModeScore(scoreObj) {
+  if (scoreObj.played === undefined || scoreObj.won === undefined) {
+    const legacyYou = Number(scoreObj.you) || 0;
+    const legacyOpponent = Number(scoreObj.opponent) || 0;
+    scoreObj.played = legacyYou + legacyOpponent;
+    scoreObj.won = legacyYou;
+  }
+  return scoreObj;
 }
 
 function createEmptyMatch() {
