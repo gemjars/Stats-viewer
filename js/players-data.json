@@ -1,0 +1,237 @@
+{
+  "version": 1,
+  "players": [
+    {
+      "id": "ea086dde-b930-4e0b-abcf-ba1b8b721bd2",
+      "name": "Alex",
+      "pronouns": "he/him",
+      "namePronounced": "alex",
+      "keyFacts": "Won last champs",
+      "champs1": {
+        "didNotPlay": false,
+        "modes": {
+          "UHC": {
+            "wins": 1,
+            "losses": 2
+          },
+          "Sword": {
+            "wins": 0,
+            "losses": 0
+          },
+          "SpearMace": {
+            "wins": 2,
+            "losses": 0
+          },
+          "Cart": {
+            "wins": 0,
+            "losses": 0
+          },
+          "DSMP": {
+            "wins": 0,
+            "losses": 0
+          }
+        },
+        "matchHistory": [
+          {
+            "id": "25e07ac0-3e15-4466-b7ed-dcaa3fdee865",
+            "opponentId": "c6bf710b-fbe0-4009-acc1-67ff86458090",
+            "opponentName": "Eryn",
+            "round": "Semi Final",
+            "overallScore": {
+              "you": 2,
+              "opponent": 1
+            },
+            "modeScores": {
+              "UHC": {
+                "you": 1,
+                "opponent": 2
+              },
+              "Sword": {
+                "you": 3,
+                "opponent": 0
+              },
+              "SpearMace": {
+                "you": 1,
+                "opponent": 0
+              },
+              "Cart": {
+                "you": 0,
+                "opponent": 0
+              },
+              "DSMP": {
+                "you": 0,
+                "opponent": 0
+              }
+            }
+          }
+        ],
+        "placement": "3rd place"
+      },
+      "qualifying": {
+        "modes": {
+          "UHC": {
+            "wins": 51,
+            "losses": 0
+          },
+          "Sword": {
+            "wins": 24,
+            "losses": 0
+          },
+          "SpearMace": {
+            "wins": 0,
+            "losses": 0
+          },
+          "Cart": {
+            "wins": 0,
+            "losses": 0
+          },
+          "DSMP": {
+            "wins": 0,
+            "losses": 0
+          },
+          "Crystal": {
+            "wins": 0,
+            "losses": 0
+          },
+          "DiaPot": {
+            "wins": 0,
+            "losses": 0
+          }
+        }
+      },
+      "country": "UK"
+    },
+    {
+      "id": "c6bf710b-fbe0-4009-acc1-67ff86458090",
+      "name": "Eryn",
+      "pronouns": "he",
+      "namePronounced": "eryn",
+      "keyFacts": "Very bad",
+      "champs1": {
+        "didNotPlay": true,
+        "modes": {
+          "UHC": {
+            "wins": 0,
+            "losses": 0
+          },
+          "Sword": {
+            "wins": 0,
+            "losses": 0
+          },
+          "SpearMace": {
+            "wins": 0,
+            "losses": 0
+          },
+          "Cart": {
+            "wins": 0,
+            "losses": 0
+          },
+          "DSMP": {
+            "wins": 0,
+            "losses": 0
+          }
+        },
+        "matchHistory": []
+      },
+      "qualifying": {
+        "modes": {
+          "UHC": {
+            "wins": 5,
+            "losses": 0
+          },
+          "Sword": {
+            "wins": 0,
+            "losses": 0
+          },
+          "SpearMace": {
+            "wins": 0,
+            "losses": 0
+          },
+          "Cart": {
+            "wins": 10,
+            "losses": 0
+          },
+          "DSMP": {
+            "wins": 0,
+            "losses": 0
+          },
+          "Crystal": {
+            "wins": 0,
+            "losses": 0
+          },
+          "DiaPot": {
+            "wins": 0,
+            "losses": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "c857c499-2228-44df-9ba7-32f583aa0aa6",
+      "name": "AiroKun",
+      "pronouns": "he",
+      "country": "Lithuania",
+      "namePronounced": "airo kun",
+      "keyFacts": "awesome",
+      "champs1": {
+        "didNotPlay": true,
+        "placement": "",
+        "modes": {
+          "UHC": {
+            "wins": 0,
+            "losses": 0
+          },
+          "Sword": {
+            "wins": 0,
+            "losses": 0
+          },
+          "SpearMace": {
+            "wins": 0,
+            "losses": 0
+          },
+          "Cart": {
+            "wins": 0,
+            "losses": 0
+          },
+          "DSMP": {
+            "wins": 0,
+            "losses": 0
+          }
+        },
+        "matchHistory": []
+      },
+      "qualifying": {
+        "modes": {
+          "UHC": {
+            "wins": 5,
+            "losses": 1
+          },
+          "Sword": {
+            "wins": 5,
+            "losses": 7
+          },
+          "SpearMace": {
+            "wins": 2,
+            "losses": 7
+          },
+          "Cart": {
+            "wins": 9,
+            "losses": 0
+          },
+          "DSMP": {
+            "wins": 0,
+            "losses": 0
+          },
+          "Crystal": {
+            "wins": 3,
+            "losses": 4
+          },
+          "DiaPot": {
+            "wins": 2,
+            "losses": 8
+          }
+        }
+      }
+    }
+  ]
+}
