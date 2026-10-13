@@ -65,6 +65,10 @@ function openPlayerModal(playerId) {
     draftPlayer.champs1.didNotPlay;
   document.getElementById("f-champs1-placement").value =
     draftPlayer.champs1.placement || "";
+  document.getElementById("f-qualifying-elo").value =
+    draftPlayer.qualifying.elo || "";
+  document.getElementById("f-qualifying-placement").value =
+    draftPlayer.qualifying.placement || "";
 
   renderChamps1Section();
   renderModesGrid(
@@ -97,17 +101,29 @@ function renderModesGrid(containerId, modesList, modesObj) {
       <div>${MODE_LABELS[mode]}</div>
       <input type="number" min="0" class="mode-input" data-mode="${mode}" data-field="wins" value="${stats.wins}">
       <input type="number" min="0" class="mode-input" data-mode="${mode}" data-field="losses" value="${stats.losses}">
-      <div class="winrate">${formatWinPct(totals.winPct)}</div>
+      <div class="winrate" data-mode="${mode}">${formatWinPct(totals.winPct)}</div>
     `;
   });
   container.innerHTML = html;
+
+  // Update the win % readout in place and keep the data model numeric,
+  // without re-rendering the inputs (that would wipe out what's being typed).
+  function updateWinrate(mode) {
+    const totals = computeTotals({ [mode]: modesObj[mode] }, [mode]);
+    const el = container.querySelector(`.winrate[data-mode="${mode}"]`);
+    if (el) el.textContent = formatWinPct(totals.winPct);
+  }
 
   container.querySelectorAll(".mode-input").forEach((input) => {
     input.addEventListener("input", () => {
       const mode = input.dataset.mode;
       const field = input.dataset.field;
-      modesObj[mode][field] = Math.max(0, Number(input.value) || 0);
-      renderModesGrid(containerId, modesList, modesObj);
+      modesObj[mode][field] =
+        input.value === "" ? 0 : Math.max(0, Number(input.value) || 0);
+      updateWinrate(mode);
+    });
+    input.addEventListener("blur", () => {
+      if (input.value === "") input.value = "0";
     });
   });
 }
@@ -130,20 +146,12 @@ function renderMatchesList() {
     return;
   }
 
-  const opponentOptions = players
-    .filter((p) => p.id !== editingPlayerId)
-    .map((p) => `<option value="${p.id}">${escapeHtml(p.name)}</option>`)
-    .join("");
-
   container.innerHTML = matches
     .map(
       (match, idx) => `
     <div class="match-card" data-match-id="${match.id}">
       <div class="match-card-top">
-        <select class="match-opponent" data-match-id="${match.id}">
-          <option value="">— Select opponent —</option>
-          ${opponentOptions}
-        </select>
+        <input type="text" class="match-opponent" data-match-id="${match.id}" placeholder="Opponent name" value="${escapeHtml(match.opponentName || "")}">
         <input type="text" class="match-round" data-match-id="${match.id}" placeholder="Round (e.g. Quarterfinal)" value="${escapeHtml(match.round || "")}">
         <div class="score-pair">
           <input type="number" min="0" class="match-overall" data-match-id="${match.id}" data-side="you" value="${match.overallScore.you}" title="Your score">
@@ -157,6 +165,10 @@ function renderMatchesList() {
           (mode) => `
           <div>
             <span class="mode-score-label">${MODE_LABELS[mode]}</span>
+            <label class="pick-checkbox">
+              <input type="checkbox" class="match-mode-pick" data-match-id="${match.id}" data-mode="${mode}" ${match.modeScores[mode].picked ? "checked" : ""}>
+              Pick
+            </label>
             <div class="score-pair">
               <input type="number" min="0" class="match-mode-score" data-match-id="${match.id}" data-mode="${mode}" data-side="you" value="${match.modeScores[mode].you}">
               <span>-</span>
@@ -171,13 +183,10 @@ function renderMatchesList() {
     )
     .join("");
 
-  container.querySelectorAll(".match-opponent").forEach((sel) => {
-    const match = matches.find((m) => m.id === sel.dataset.matchId);
-    sel.value = match.opponentId || "";
-    sel.addEventListener("change", () => {
-      match.opponentId = sel.value;
-      const opp = players.find((p) => p.id === sel.value);
-      match.opponentName = opp ? opp.name : "";
+  container.querySelectorAll(".match-opponent").forEach((input) => {
+    input.addEventListener("input", () => {
+      const match = matches.find((m) => m.id === input.dataset.matchId);
+      match.opponentName = input.value;
     });
   });
 
@@ -191,20 +200,29 @@ function renderMatchesList() {
   container.querySelectorAll(".match-overall").forEach((input) => {
     input.addEventListener("input", () => {
       const match = matches.find((m) => m.id === input.dataset.matchId);
-      match.overallScore[input.dataset.side] = Math.max(
-        0,
-        Number(input.value) || 0,
-      );
+      match.overallScore[input.dataset.side] =
+        input.value === "" ? 0 : Math.max(0, Number(input.value) || 0);
+    });
+    input.addEventListener("blur", () => {
+      if (input.value === "") input.value = "0";
+    });
+  });
+
+  container.querySelectorAll(".match-mode-pick").forEach((cb) => {
+    cb.addEventListener("change", () => {
+      const match = matches.find((m) => m.id === cb.dataset.matchId);
+      match.modeScores[cb.dataset.mode].picked = cb.checked;
     });
   });
 
   container.querySelectorAll(".match-mode-score").forEach((input) => {
     input.addEventListener("input", () => {
       const match = matches.find((m) => m.id === input.dataset.matchId);
-      match.modeScores[input.dataset.mode][input.dataset.side] = Math.max(
-        0,
-        Number(input.value) || 0,
-      );
+      match.modeScores[input.dataset.mode][input.dataset.side] =
+        input.value === "" ? 0 : Math.max(0, Number(input.value) || 0);
+    });
+    input.addEventListener("blur", () => {
+      if (input.value === "") input.value = "0";
     });
   });
 
@@ -254,6 +272,12 @@ function setupPlayersTab() {
       draftPlayer.keyFacts = document.getElementById("f-keyfacts").value.trim();
       draftPlayer.champs1.placement = document
         .getElementById("f-champs1-placement")
+        .value.trim();
+      draftPlayer.qualifying.elo = document
+        .getElementById("f-qualifying-elo")
+        .value.trim();
+      draftPlayer.qualifying.placement = document
+        .getElementById("f-qualifying-placement")
         .value.trim();
 
       if (!draftPlayer.name) {

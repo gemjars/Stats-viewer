@@ -47,7 +47,7 @@ function emptyModeStats(modes) {
 function emptyModeScores(modes) {
   const obj = {};
   modes.forEach((m) => {
-    obj[m] = { you: 0, opponent: 0 };
+    obj[m] = { you: 0, opponent: 0, picked: false };
   });
   return obj;
 }
@@ -55,7 +55,6 @@ function emptyModeScores(modes) {
 function createEmptyMatch() {
   return {
     id: uuid(),
-    opponentId: "",
     opponentName: "",
     round: "",
     overallScore: { you: 0, opponent: 0 },
@@ -78,6 +77,8 @@ function createEmptyPlayer() {
       matchHistory: [],
     },
     qualifying: {
+      elo: "",
+      placement: "",
       modes: emptyModeStats(QUALI_MODES),
     },
   };

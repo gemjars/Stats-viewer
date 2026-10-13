@@ -43,17 +43,23 @@ function buildMatchHistoryItemsHtml(matches) {
         m.opponentName ||
         (players.find((pl) => pl.id === m.opponentId) || {}).name ||
         "Unknown opponent";
+      const resultClass =
+        m.overallScore.you > m.overallScore.opponent
+          ? "match-win"
+          : m.overallScore.you < m.overallScore.opponent
+            ? "match-loss"
+            : "";
       const modeBreakdown = CHAMPS_MODES.filter(
         (mode) =>
           m.modeScores[mode].you !== 0 || m.modeScores[mode].opponent !== 0,
       )
         .map(
           (mode) =>
-            `${MODE_LABELS[mode]} ${m.modeScores[mode].you}-${m.modeScores[mode].opponent}`,
+            `${MODE_LABELS[mode]}${m.modeScores[mode].picked ? ' <span class="pick-tag">Pick</span>' : ""} ${m.modeScores[mode].you}-${m.modeScores[mode].opponent}`,
         )
         .join(" · ");
       return `
-          <div class="compare-match-item">
+          <div class="compare-match-item ${resultClass}">
             <div class="vs-line"><span>vs ${escapeHtml(oppName)}${m.round ? ` <span class="match-round-tag">${escapeHtml(m.round)}</span>` : ""}</span><span>${m.overallScore.you}-${m.overallScore.opponent}</span></div>
             ${modeBreakdown ? `<div class="mode-breakdown">${modeBreakdown}</div>` : ""}
           </div>
@@ -194,6 +200,8 @@ function renderCompareCharts(selected) {
         <div class="chart-group">
           <h5>Qualifying</h5>
           <div class="chart-group-totals">${qualiTotals.wins}W &ndash; ${qualiTotals.losses}L</div>
+          ${p.qualifying.elo ? `<div class="chart-group-placement">Elo: ${escapeHtml(p.qualifying.elo)}</div>` : ""}
+          ${p.qualifying.placement ? `<div class="chart-group-placement">Placement: ${escapeHtml(p.qualifying.placement)}</div>` : ""}
           ${qualiSvg}
         </div>
         <div class="chart-group">
@@ -201,9 +209,9 @@ function renderCompareCharts(selected) {
           ${champsTotals ? `<div class="chart-group-totals">${champsTotals.wins}W &ndash; ${champsTotals.losses}L</div>` : ""}
           ${champsTotals && p.champs1.placement ? `<div class="chart-group-placement">Placement: ${escapeHtml(p.champs1.placement)}</div>` : ""}
           ${champsBlock}
-          ${inlineMatches}
         </div>
       </div>
+      ${inlineMatches}
       <div class="chart-player-info">
         ${p.country ? `<div class="info-line">🌍 ${escapeHtml(p.country)}</div>` : ""}
         ${p.namePronounced ? `<div class="info-line">🔊 ${escapeHtml(p.namePronounced)}</div>` : ""}
@@ -257,6 +265,14 @@ function renderCompareTable() {
   html += `<tr><td class="stat-label">Key Facts</td>${selected.map((p) => `<td class="key-facts-cell">${escapeHtml(p.keyFacts) || "—"}</td>`).join("")}</tr>`;
 
   html += sectionRow("Qualifying", colCount);
+  html += statRow(
+    "Elo",
+    selected.map((p) => escapeHtml(p.qualifying.elo) || "—"),
+  );
+  html += statRow(
+    "Placement",
+    selected.map((p) => escapeHtml(p.qualifying.placement) || "—"),
+  );
   QUALI_MODES.forEach((mode) => {
     const cells = selected.map((p) => {
       const s = p.qualifying.modes[mode];
@@ -277,6 +293,10 @@ function renderCompareTable() {
   html += statRow(
     "Status",
     selected.map((p) => (p.champs1.didNotPlay ? "Did not play" : "Played")),
+  );
+  html += statRow(
+    "Placement",
+    selected.map((p) => escapeHtml(p.champs1.placement) || "—"),
   );
   CHAMPS_MODES.forEach((mode) => {
     const cells = selected.map((p) => {

@@ -12,7 +12,7 @@
   --win: #2f9e63;
   --loss: #c0304a;
   --radius: 10px;
-  font-size: 15px;
+  font-size: 17px;
 }
 
 * { box-sizing: border-box; }
@@ -45,7 +45,7 @@ h1, h2, h3, h4 { margin: 0 0 8px; }
 }
 
 .storage-status {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-dim);
 }
 
@@ -54,7 +54,7 @@ h1, h2, h3, h4 { margin: 0 0 8px; }
   padding: 6px 24px;
   background: var(--surface-alt);
   border-bottom: 1px solid var(--border);
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-dim);
 }
 
@@ -73,7 +73,7 @@ h1, h2, h3, h4 { margin: 0 0 8px; }
   border: none;
   color: var(--text-dim);
   padding: 12px 18px;
-  font-size: 14px;
+  font-size: 16px;
   cursor: pointer;
   border-bottom: 2px solid transparent;
 }
@@ -104,7 +104,7 @@ main {
   color: var(--text);
   padding: 8px 14px;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 15px;
   cursor: pointer;
 }
 
@@ -128,14 +128,14 @@ main {
 
 .btn-small {
   padding: 5px 10px;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .btn-icon {
   background: none;
   border: none;
   color: var(--text-dim);
-  font-size: 22px;
+  font-size: 24px;
   line-height: 1;
   cursor: pointer;
   padding: 0 4px;
@@ -171,25 +171,25 @@ main {
 }
 
 .player-card .pronouns {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-dim);
   font-weight: normal;
 }
 
 .player-card .pronounced {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-dim);
   margin-bottom: 8px;
 }
 
 .player-card .country {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-dim);
   margin-bottom: 4px;
 }
 
 .player-card .key-facts {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-dim);
   white-space: pre-line;
   margin-bottom: 10px;
@@ -200,7 +200,7 @@ main {
 .player-card .quick-stats {
   display: flex;
   gap: 16px;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-dim);
   margin-bottom: 12px;
 }
@@ -269,7 +269,7 @@ main {
 
 .form-section label {
   display: block;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-dim);
   margin-bottom: 10px;
 }
@@ -285,7 +285,7 @@ main {
   border: 1px solid var(--border);
   border-radius: 6px;
   color: var(--text);
-  font-size: 14px;
+  font-size: 15px;
   font-family: inherit;
 }
 
@@ -299,15 +299,15 @@ main {
 
 .modes-grid {
   display: grid;
-  grid-template-columns: 110px 1fr 1fr 70px;
+  grid-template-columns: 120px 1fr 1fr 80px;
   gap: 8px;
   align-items: center;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .modes-grid .mode-header {
   color: var(--text-dim);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .modes-grid input[type="number"] {
@@ -321,7 +321,7 @@ main {
 
 .modes-grid .winrate {
   color: var(--text-dim);
-  font-size: 12px;
+  font-size: 13px;
   text-align: right;
 }
 
@@ -342,7 +342,12 @@ main {
   flex-wrap: wrap;
 }
 
-.match-card-top select { flex: 1; min-width: 140px; }
+.match-card-top select,
+.match-card-top input.match-opponent {
+  flex: 1;
+  min-width: 140px;
+  margin: 0;
+}
 
 .match-card-top input.match-round {
   flex: 1;
@@ -370,7 +375,7 @@ main {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
   gap: 8px;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .match-modes-grid .mode-score-label {
@@ -379,12 +384,22 @@ main {
   display: block;
 }
 
+.pick-checkbox {
+  display: flex !important;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px !important;
+  margin-bottom: 4px !important;
+}
+
+.pick-checkbox input { width: auto; }
+
 .btn-remove-match {
   background: none;
   border: none;
   color: var(--danger);
   cursor: pointer;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 /* Compare */
@@ -413,7 +428,7 @@ main {
   border: 1px solid var(--border);
   border-radius: 20px;
   padding: 6px 14px;
-  font-size: 13px;
+  font-size: 14px;
   cursor: pointer;
 }
 
@@ -442,7 +457,7 @@ main {
 }
 
 .chart-card .pronouns {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--text-dim);
   font-weight: normal;
   margin-left: 4px;
@@ -480,21 +495,21 @@ main {
 
 .chart-group h5 {
   margin: 4px 0 2px;
-  font-size: 12px;
+  font-size: 14px;
   color: var(--text-dim);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
 .chart-group-totals {
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--text);
   margin-bottom: 4px;
 }
 
 .chart-group-placement {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--text-dim);
   margin-bottom: 6px;
 }
@@ -521,13 +536,13 @@ main {
 }
 
 .chart-player-info .info-line {
-  font-size: 13px;
+  font-size: 15px;
   color: var(--text-dim);
   margin-bottom: 4px;
 }
 
 .chart-player-info .info-keyfacts {
-  font-size: 15px;
+  font-size: 18px;
   font-weight: 600;
   color: var(--text);
   white-space: pre-line;
@@ -542,7 +557,7 @@ main {
   border: 1px dashed var(--border);
   border-radius: 8px;
   color: var(--text-dim);
-  font-size: 13px;
+  font-size: 15px;
   padding: 0 16px;
   text-align: center;
 }
@@ -559,19 +574,19 @@ main {
 
 .wheel-label {
   fill: var(--text);
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 700;
 }
 
 .wheel-label-games {
   fill: var(--text-dim);
-  font-size: 8px;
+  font-size: 10px;
   opacity: 0.8;
 }
 
 .wheel-value {
   fill: var(--text);
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 700;
   text-anchor: middle;
   dominant-baseline: middle;
@@ -579,14 +594,14 @@ main {
 
 .wheel-center-pct {
   fill: var(--text);
-  font-size: 19px;
+  font-size: 24px;
   font-weight: 700;
   text-anchor: middle;
 }
 
 .wheel-center-label {
   fill: var(--text-dim);
-  font-size: 9px;
+  font-size: 11px;
   text-anchor: middle;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -601,7 +616,7 @@ main {
 .compare-details summary {
   cursor: pointer;
   color: var(--text-dim);
-  font-size: 13px;
+  font-size: 14px;
   user-select: none;
 }
 
@@ -617,8 +632,8 @@ table.compare-table {
 
 table.compare-table th, table.compare-table td {
   border: 1px solid var(--border);
-  padding: 8px 12px;
-  font-size: 13px;
+  padding: 10px 14px;
+  font-size: 15px;
   text-align: left;
   vertical-align: top;
 }
@@ -660,11 +675,22 @@ table.compare-table td.key-facts-cell { white-space: pre-line; }
 
 .compare-match-item {
   border-top: 1px solid var(--border);
-  padding: 8px 0;
-  font-size: 13px;
+  padding: 8px 10px;
+  font-size: 15px;
+  border-radius: 6px;
 }
 
 .compare-match-item:first-of-type { border-top: none; }
+
+.compare-match-item.match-win {
+  background: rgba(47, 158, 99, 0.12);
+  border-left: 3px solid var(--win);
+}
+
+.compare-match-item.match-loss {
+  background: rgba(192, 48, 74, 0.1);
+  border-left: 3px solid var(--loss);
+}
 
 .compare-match-item .vs-line {
   display: flex;
@@ -674,13 +700,23 @@ table.compare-table td.key-facts-cell { white-space: pre-line; }
 
 .compare-match-item .mode-breakdown {
   color: var(--text-dim);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .match-round-tag {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-dim);
   font-weight: normal;
+}
+
+.pick-tag {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  padding: 0 3px;
+  margin-left: 1px;
 }
 
 .toast {
@@ -692,9 +728,32 @@ table.compare-table td.key-facts-cell { white-space: pre-line; }
   border: 1px solid var(--border);
   padding: 10px 18px;
   border-radius: 8px;
-  font-size: 13px;
+  font-size: 14px;
   z-index: 200;
 }
 
 .toast.error { border-color: var(--danger); color: var(--danger); }
 .toast[hidden] { display: none; }
+
+/* Scale text up further on large screens/monitors for clearer reading from a distance. */
+@media (min-width: 1600px) {
+  :root { font-size: 19px; }
+
+  table.compare-table th, table.compare-table td { font-size: 17px; }
+  .compare-match-item { font-size: 16px; }
+  .chart-group-totals { font-size: 19px; }
+  .chart-group-placement { font-size: 15px; }
+  .chart-player-info .info-line { font-size: 16px; }
+  .chart-player-info .info-keyfacts { font-size: 21px; }
+  .player-card .key-facts,
+  .player-card .pronounced,
+  .player-card .country,
+  .player-card .pronouns { font-size: 15px; }
+
+  .wheel-label { font-size: 14px; }
+  .wheel-label-games { font-size: 11px; }
+  .wheel-value { font-size: 17px; }
+  .wheel-center-pct { font-size: 27px; }
+  .wheel-center-label { font-size: 12px; }
+}
+
