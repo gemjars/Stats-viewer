@@ -51,12 +51,11 @@ function buildMatchHistoryItemsHtml(matches) {
             : "";
       const modeBreakdown = CHAMPS_MODES.filter((mode) => {
         const s = normalizeModeScore(m.modeScores[mode]);
-        return s.played !== 0;
+        return s.wins !== 0 || s.losses !== 0;
       })
         .map((mode) => {
           const s = normalizeModeScore(m.modeScores[mode]);
-          const losses = Math.max(0, s.played - s.won);
-          return `${MODE_LABELS[mode]}${s.picked ? ' <span class="pick-tag">Pick</span>' : ""} ${s.won}-${losses}`;
+          return `${MODE_LABELS[mode]}${s.picked ? ' <span class="pick-tag">Pick</span>' : ""} ${s.wins}-${s.losses}`;
         })
         .join(" · ");
       return `
@@ -201,14 +200,14 @@ function renderCompareCharts(selected) {
       <div class="wheel-row">
         <div class="chart-group">
           <h5>Qualifying</h5>
-          <div class="chart-group-totals">${qualiTotals.wins}W &ndash; ${qualiTotals.losses}L</div>
+          <div class="chart-group-totals">${qualiTotals.wins}W – ${qualiTotals.losses}L</div>
           ${p.qualifying.elo ? `<div class="chart-group-placement">Elo: ${escapeHtml(p.qualifying.elo)}</div>` : ""}
           ${p.qualifying.placement ? `<div class="chart-group-placement">Placement: ${escapeHtml(p.qualifying.placement)}</div>` : ""}
           ${qualiSvg}
         </div>
         <div class="chart-group">
           <h5>Champs 1</h5>
-          ${champsTotals ? `<div class="chart-group-totals">${champsTotals.wins}W &ndash; ${champsTotals.losses}L</div>` : ""}
+          ${champsTotals ? `<div class="chart-group-totals">${champsTotals.wins}W – ${champsTotals.losses}L</div>` : ""}
           ${champsTotals && p.champs1.placement ? `<div class="chart-group-placement">Placement: ${escapeHtml(p.champs1.placement)}</div>` : ""}
           ${champsBlock}
         </div>
@@ -352,104 +351,334 @@ function setupCompareTab() {
     });
 }
 
+function wrapCanvasText(ctx, text, maxWidth) {
+  const words = text.split(/\s+/).filter(Boolean);
+  const lines = [];
+  let current = "";
+  words.forEach((word) => {
+    const test = current ? `${current} ${word}` : word;
+    if (current && ctx.measureText(test).width > maxWidth) {
+      lines.push(current);
+      current = word;
+    } else {
+      current = test;
+    }
+  });
+  if (current) lines.push(current);
+  return lines;
+}
+
+// Draws one Qualifying/Champs 1 wheel directly onto the canvas (same angle/radius
+// math as buildGroupWheelSvg) so the exported PNG never needs to rasterize an
+// <img>, which avoids the browser's canvas "tainted by foreignObject" restriction.
+function drawWheelOnCanvas(ctx, cx, cy, maxR, modesList, modesObj, color) {
+  const n = modesList.length;
+  const anglePer = 360 / n;
+  const toXY = (r, angleDeg) => {
+    const rad = ((angleDeg - 90) * Math.PI) / 180;
+    return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+  };
+
+  const sectorData = modesList.map((mode, i) => {
+    const totals = computeTotals({ [mode]: modesObj[mode] }, [mode]);
+    const r =
+      totals.winPct === null ? 0 : Math.max((totals.winPct / 100) * maxR, 3);
+    return {
+      mode,
+      startAngle: i * anglePer,
+      winPct: totals.winPct,
+      r,
+      games: totals.wins + totals.losses,
+    };
+  });
+
+  ctx.strokeStyle = "#d7dce3";
+  ctx.setLineDash([5, 6]);
+  ctx.lineWidth = 1;
+  [0.25, 0.5, 0.75, 1].forEach((f) => {
+    ctx.beginPath();
+    ctx.arc(cx, cy, maxR * f, 0, Math.PI * 2);
+    ctx.stroke();
+  });
+  sectorData.forEach((s) => {
+    const p = toXY(maxR, s.startAngle);
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+  });
+  ctx.setLineDash([]);
+
+  sectorData.forEach((s) => {
+    const startRad = ((s.startAngle - 90) * Math.PI) / 180;
+    const endRad = ((s.startAngle + anglePer - 90) * Math.PI) / 180;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, s.r, startRad, endRad);
+    ctx.closePath();
+    ctx.fillStyle = `${color}d9`;
+    ctx.fill();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  });
+
+  ctx.textBaseline = "middle";
+  sectorData
+    .filter((s) => s.winPct !== null)
+    .forEach((s) => {
+      const mid = s.startAngle + anglePer / 2;
+      const p = toXY(maxR - 10, mid);
+      ctx.fillStyle = "#1a2130";
+      ctx.font = "bold 15px 'Segoe UI'";
+      ctx.textAlign = "center";
+      ctx.fillText(formatWinPct(s.winPct), p.x, p.y);
+    });
+
+  const labelR = maxR + 30;
+  sectorData.forEach((s) => {
+    const mid = s.startAngle + anglePer / 2;
+    const p = toXY(labelR, mid);
+    const rad = ((mid - 90) * Math.PI) / 180;
+    const dx = Math.cos(rad);
+    ctx.textAlign = dx > 0.3 ? "left" : dx < -0.3 ? "right" : "center";
+    ctx.fillStyle = "#1a2130";
+    ctx.font = "bold 14px 'Segoe UI'";
+    ctx.fillText(modeLabelPlain(s.mode), p.x, p.y);
+    ctx.fillStyle = "#5b6472";
+    ctx.font = "11px 'Segoe UI'";
+    ctx.fillText(`${s.games} game${s.games === 1 ? "" : "s"}`, p.x, p.y + 16);
+  });
+
+  const totals = computeTotals(modesObj, modesList);
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#1a2130";
+  ctx.font = "bold 28px 'Segoe UI'";
+  ctx.fillText(formatWinPct(totals.winPct), cx, cy - 8);
+  ctx.fillStyle = "#5b6472";
+  ctx.font = "12px 'Segoe UI'";
+  ctx.fillText("OVERALL", cx, cy + 16);
+}
+
+function drawDnpBox(ctx, cx, cy, size) {
+  const half = size / 2;
+  ctx.strokeStyle = "#d7dce3";
+  ctx.setLineDash([8, 8]);
+  ctx.lineWidth = 2;
+  ctx.strokeRect(cx - half, cy - half, size, size);
+  ctx.setLineDash([]);
+  ctx.fillStyle = "#5b6472";
+  ctx.font = "22px 'Segoe UI'";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("Did not play in Champs 1", cx, cy);
+}
+
 // A4 at 150dpi (close enough for sharp on-screen/print output without being too heavy to render).
 const EXPORT_WIDTH = 1240;
 const EXPORT_HEIGHT = 1754;
 
-function buildExportHtml(p) {
-  const qualiTotals = computeTotals(p.qualifying.modes, QUALI_MODES);
-  const qualiSvg = buildGroupWheelSvg(
-    QUALI_MODES,
-    p.qualifying.modes,
-    CHART_GROUP_COLORS.quali,
-    "Qualifying",
-  );
-  const champsTotals = p.champs1.didNotPlay
-    ? null
-    : computeTotals(p.champs1.modes, CHAMPS_MODES);
-  const champsBlock = p.champs1.didNotPlay
-    ? '<div class="dnp-placeholder">Did not play in Champs 1</div>'
-    : buildGroupWheelSvg(
-        CHAMPS_MODES,
-        p.champs1.modes,
-        CHART_GROUP_COLORS.champs1,
-        "Champs 1",
-      );
-  const matchesSection =
-    !p.champs1.didNotPlay && p.champs1.matchHistory.length
-      ? `<div class="export-match-section">
-          <h2>Champs 1 Match History</h2>
-          ${buildMatchHistoryItemsHtml(p.champs1.matchHistory)}
-        </div>`
-      : "";
+// Paints the whole single-player stats sheet straight onto a canvas (no
+// intermediate image), which is the only reliable way to end up with a
+// non-tainted canvas we're actually allowed to export as a PNG file.
+function exportPlayerImage(player) {
+  const canvas = document.createElement("canvas");
+  canvas.width = EXPORT_WIDTH;
+  canvas.height = EXPORT_HEIGHT;
+  const ctx = canvas.getContext("2d");
+  const marginX = 70;
+  const contentWidth = EXPORT_WIDTH - marginX * 2;
 
-  return `
-    <div class="export-header">
-      <h1>${escapeHtml(p.name)}${p.pronouns ? `<span class="export-pronouns"> (${escapeHtml(p.pronouns)})</span>` : ""}</h1>
-      ${p.country ? `<div class="export-info-line">🌍 ${escapeHtml(p.country)}</div>` : ""}
-      ${p.namePronounced ? `<div class="export-info-line">🔊 ${escapeHtml(p.namePronounced)}</div>` : ""}
-    </div>
-    <div class="export-wheel-row">
-      <div class="export-wheel-col">
-        <h2>Qualifying</h2>
-        <div class="export-stat-line">${qualiTotals.wins}W &ndash; ${qualiTotals.losses}L</div>
-        ${p.qualifying.elo ? `<div class="chart-group-placement">Elo: ${escapeHtml(p.qualifying.elo)}</div>` : ""}
-        ${p.qualifying.placement ? `<div class="chart-group-placement">Placement: ${escapeHtml(p.qualifying.placement)}</div>` : ""}
-        ${qualiSvg}
-      </div>
-      <div class="export-wheel-col">
-        <h2>Champs 1</h2>
-        ${champsTotals ? `<div class="export-stat-line">${champsTotals.wins}W &ndash; ${champsTotals.losses}L</div>` : ""}
-        ${champsTotals && p.champs1.placement ? `<div class="chart-group-placement">Placement: ${escapeHtml(p.champs1.placement)}</div>` : ""}
-        ${champsBlock}
-      </div>
-    </div>
-    ${matchesSection}
-    ${p.keyFacts ? `<div class="export-footer"><div class="info-keyfacts">${escapeHtml(p.keyFacts)}</div></div>` : ""}
-  `;
-}
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, EXPORT_WIDTH, EXPORT_HEIGHT);
 
-async function exportPlayerImage(player) {
-  if (typeof html2canvas === "undefined") {
-    showToast(
-      "Image export library failed to load. Check your internet connection and try again.",
-      true,
-    );
-    return;
+  // Header
+  let y = 100;
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#1a2130";
+  ctx.font = "bold 48px 'Segoe UI'";
+  let headerText = player.name || "Unnamed Player";
+  if (player.pronouns) headerText += `  (${player.pronouns})`;
+  ctx.fillText(headerText, EXPORT_WIDTH / 2, y);
+  y += 40;
+  const infoBits = [];
+  if (player.country) infoBits.push(`🌍 ${player.country}`);
+  if (player.namePronounced) infoBits.push(`🔊 ${player.namePronounced}`);
+  if (infoBits.length) {
+    ctx.font = "22px 'Segoe UI'";
+    ctx.fillStyle = "#5b6472";
+    ctx.fillText(infoBits.join("      "), EXPORT_WIDTH / 2, y);
   }
 
-  const container = document.createElement("div");
-  container.className = "export-page";
-  container.style.width = `${EXPORT_WIDTH}px`;
-  container.style.height = `${EXPORT_HEIGHT}px`;
-  container.style.position = "fixed";
-  container.style.top = "0";
-  container.style.left = "-99999px";
-  container.innerHTML = buildExportHtml(player);
-  document.body.appendChild(container);
+  // Wheels row
+  const rowTop = 220;
+  const colWidth = (contentWidth - 60) / 2;
+  const colCenters = [
+    marginX + colWidth / 2,
+    marginX + colWidth + 60 + colWidth / 2,
+  ];
+  const maxR = 220;
 
-  try {
-    const canvas = await html2canvas(container, {
-      backgroundColor: "#ffffff",
-      width: EXPORT_WIDTH,
-      height: EXPORT_HEIGHT,
-      scale: 2,
+  [
+    {
+      title: "QUALIFYING",
+      totals: computeTotals(player.qualifying.modes, QUALI_MODES),
+      extra: [
+        player.qualifying.elo ? `Elo: ${player.qualifying.elo}` : "",
+        player.qualifying.placement
+          ? `Placement: ${player.qualifying.placement}`
+          : "",
+      ].filter(Boolean),
+      draw: (cx, cy) =>
+        drawWheelOnCanvas(
+          ctx,
+          cx,
+          cy,
+          maxR,
+          QUALI_MODES,
+          player.qualifying.modes,
+          CHART_GROUP_COLORS.quali,
+        ),
+    },
+    {
+      title: "CHAMPS 1",
+      totals: player.champs1.didNotPlay
+        ? null
+        : computeTotals(player.champs1.modes, CHAMPS_MODES),
+      extra: player.champs1.placement
+        ? [`Placement: ${player.champs1.placement}`]
+        : [],
+      draw: (cx, cy) =>
+        player.champs1.didNotPlay
+          ? drawDnpBox(ctx, cx, cy, maxR * 1.3)
+          : drawWheelOnCanvas(
+              ctx,
+              cx,
+              cy,
+              maxR,
+              CHAMPS_MODES,
+              player.champs1.modes,
+              CHART_GROUP_COLORS.champs1,
+            ),
+    },
+  ].forEach((col, i) => {
+    const cx = colCenters[i];
+    let colY = rowTop;
+    ctx.textAlign = "center";
+    ctx.font = "bold 24px 'Segoe UI'";
+    ctx.fillStyle = "#5b6472";
+    ctx.fillText(col.title, cx, colY);
+    colY += 38;
+    if (col.totals) {
+      ctx.font = "bold 30px 'Segoe UI'";
+      ctx.fillStyle = "#1a2130";
+      ctx.fillText(
+        `${col.totals.wins}W \u2013 ${col.totals.losses}L`,
+        cx,
+        colY,
+      );
+      colY += 32;
+    }
+    col.extra.forEach((line) => {
+      ctx.font = "20px 'Segoe UI'";
+      ctx.fillStyle = "#5b6472";
+      ctx.fillText(line, cx, colY);
+      colY += 26;
     });
-    // A blob: URL is more reliable for triggering a real download than a giant data: URI.
-    const blob = await new Promise((resolve) =>
-      canvas.toBlob(resolve, "image/png"),
-    );
-    const url = URL.createObjectURL(blob);
+    colY += maxR + 70;
+    col.draw(cx, colY);
+  });
+
+  // Match history (full width, below the wheels)
+  let matchY = rowTop + 38 + 32 + 26 * 2 + maxR * 2 + 100;
+  const matches = player.champs1.didNotPlay ? [] : player.champs1.matchHistory;
+  const footerReserve = player.keyFacts ? 160 : 60;
+  const matchBottom = EXPORT_HEIGHT - footerReserve;
+
+  if (matches.length > 0) {
+    ctx.textAlign = "center";
+    ctx.font = "bold 24px 'Segoe UI'";
+    ctx.fillStyle = "#5b6472";
+    ctx.fillText("MATCH HISTORY", EXPORT_WIDTH / 2, matchY);
+    matchY += 36;
+    ctx.textAlign = "left";
+
+    for (const m of matches) {
+      if (matchY > matchBottom) break;
+      const oppName = m.opponentName || "Unknown opponent";
+      const resultWin = m.overallScore.you > m.overallScore.opponent;
+      const resultLoss = m.overallScore.you < m.overallScore.opponent;
+      ctx.fillStyle = resultWin
+        ? "#eaf7ef"
+        : resultLoss
+          ? "#fbe9ec"
+          : "#f0f2f5";
+      ctx.fillRect(marginX, matchY - 24, contentWidth, 56);
+
+      ctx.font = "bold 20px 'Segoe UI'";
+      ctx.fillStyle = "#1a2130";
+      let vsLine = `vs ${oppName}`;
+      if (m.round) vsLine += `  (${m.round})`;
+      ctx.fillText(vsLine, marginX + 14, matchY);
+      ctx.textAlign = "right";
+      ctx.fillText(
+        `${m.overallScore.you}-${m.overallScore.opponent}`,
+        marginX + contentWidth - 14,
+        matchY,
+      );
+      ctx.textAlign = "left";
+
+      const breakdown = CHAMPS_MODES.filter((mode) => {
+        const s = normalizeModeScore(m.modeScores[mode]);
+        return s.wins !== 0 || s.losses !== 0;
+      })
+        .map((mode) => {
+          const s = normalizeModeScore(m.modeScores[mode]);
+          const pick = s.picked ? " [Pick]" : "";
+          return `${modeLabelPlain(mode)}${pick} ${s.wins}-${s.losses}`;
+        })
+        .join("   \u00b7   ");
+      if (breakdown) {
+        ctx.font = "16px 'Segoe UI'";
+        ctx.fillStyle = "#5b6472";
+        ctx.fillText(breakdown, marginX + 14, matchY + 22);
+      }
+      matchY += 70;
+    }
+  }
+
+  // Key facts footer, pinned near the bottom
+  if (player.keyFacts) {
+    ctx.font = "bold 30px 'Segoe UI'";
+    const lines = player.keyFacts
+      .split("\n")
+      .flatMap((line) => wrapCanvasText(ctx, line, contentWidth));
+    const blockHeight = lines.length * 38 + 30;
+    const topY = EXPORT_HEIGHT - 60 - blockHeight;
+    ctx.strokeStyle = "#d7dce3";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(marginX, topY - 10);
+    ctx.lineTo(EXPORT_WIDTH - marginX, topY - 10);
+    ctx.stroke();
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#1a2130";
+    lines.forEach((line, i) => {
+      ctx.fillText(line, marginX, topY + 30 + i * 38);
+    });
+  }
+
+  canvas.toBlob((blob) => {
+    if (!blob) {
+      showToast("Could not generate the image.", true);
+      return;
+    }
+    const downloadUrl = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url;
+    a.href = downloadUrl;
     const safeName = (player.name || "player").replace(/[^a-z0-9]+/gi, "-");
     a.download = `${safeName}-stats.png`;
     a.click();
-    URL.revokeObjectURL(url);
-  } catch (e) {
-    console.error(e);
-    showToast("Could not generate the image.", true);
-  } finally {
-    container.remove();
-  }
+    URL.revokeObjectURL(downloadUrl);
+  }, "image/png");
 }

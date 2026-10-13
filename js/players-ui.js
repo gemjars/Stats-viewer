@@ -183,14 +183,13 @@ function renderMatchesList() {
               Pick
             </label>
             <div class="score-pair score-pair-labeled">
-              <label class="score-mini-label">Played
-                <input type="number" min="0" class="match-mode-score" data-match-id="${match.id}" data-mode="${mode}" data-field="played" value="${scores.played}">
+              <label class="score-mini-label">Rounds Won
+                <input type="number" min="0" class="match-mode-score" data-match-id="${match.id}" data-mode="${mode}" data-field="wins" value="${scores.wins}">
               </label>
-              <label class="score-mini-label">Won
-                <input type="number" min="0" class="match-mode-score" data-match-id="${match.id}" data-mode="${mode}" data-field="won" value="${scores.won}">
+              <label class="score-mini-label">Rounds Lost
+                <input type="number" min="0" class="match-mode-score" data-match-id="${match.id}" data-mode="${mode}" data-field="losses" value="${scores.losses}">
               </label>
             </div>
-            <span class="mode-losses-readout" data-match-id="${match.id}" data-mode="${mode}">Losses: ${scores.played - scores.won}</span>
           </div>
         `;
         }).join("")}
@@ -235,15 +234,8 @@ function renderMatchesList() {
   container.querySelectorAll(".match-mode-score").forEach((input) => {
     input.addEventListener("input", () => {
       const match = matches.find((m) => m.id === input.dataset.matchId);
-      const score = match.modeScores[input.dataset.mode];
-      score[input.dataset.field] =
+      match.modeScores[input.dataset.mode][input.dataset.field] =
         input.value === "" ? 0 : Math.max(0, Number(input.value) || 0);
-      const readout = container.querySelector(
-        `.mode-losses-readout[data-match-id="${match.id}"][data-mode="${input.dataset.mode}"]`,
-      );
-      if (readout) {
-        readout.textContent = `Losses: ${Math.max(0, score.played - score.won)}`;
-      }
     });
     input.addEventListener("blur", () => {
       if (input.value === "") input.value = "0";

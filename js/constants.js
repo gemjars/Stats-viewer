@@ -14,12 +14,18 @@ const QUALI_MODES = [
 const MODE_LABELS = {
   UHC: "UHC",
   Sword: "Sword",
-  SpearMace: "Spear & Mace",
+  SpearMace: "Spear &amp; Mace",
   Cart: "Cart",
   DSMP: "DSMP",
   Crystal: "Crystal",
   DiaPot: "Dia Pot",
 };
+
+// MODE_LABELS values are pre-escaped for HTML/SVG markup - use this for
+// contexts that want the literal text instead, like canvas fillText().
+function modeLabelPlain(mode) {
+  return MODE_LABELS[mode].replace(/&amp;/g, "&");
+}
 
 const CHART_GROUP_COLORS = {
   quali: "#5b8def",
@@ -55,20 +61,25 @@ function emptyModePlayedWon(modes) {
 function emptyModeScores(modes) {
   const obj = {};
   modes.forEach((m) => {
-    obj[m] = { played: 0, won: 0, picked: false };
+    obj[m] = { wins: 0, losses: 0, picked: false };
   });
   return obj;
 }
 
-// Match mode scores are entered as "games played" + "games won" (losses are
-// derived). Old saved data used "you"/"opponent" - back-fill played/won from
-// those so existing matches keep showing correctly.
+// Match history mode scores are entered directly as "rounds won" + "rounds
+// lost". Older saved data used "games played"/"games won", and even older
+// data used "you"/"opponent" - back-fill wins/losses from whichever is present.
 function normalizeModeScore(scoreObj) {
-  if (scoreObj.played === undefined || scoreObj.won === undefined) {
-    const legacyYou = Number(scoreObj.you) || 0;
-    const legacyOpponent = Number(scoreObj.opponent) || 0;
-    scoreObj.played = legacyYou + legacyOpponent;
-    scoreObj.won = legacyYou;
+  if (scoreObj.wins === undefined || scoreObj.losses === undefined) {
+    if (scoreObj.played !== undefined || scoreObj.won !== undefined) {
+      const played = Number(scoreObj.played) || 0;
+      const won = Number(scoreObj.won) || 0;
+      scoreObj.wins = won;
+      scoreObj.losses = Math.max(0, played - won);
+    } else {
+      scoreObj.wins = Number(scoreObj.you) || 0;
+      scoreObj.losses = Number(scoreObj.opponent) || 0;
+    }
   }
   return scoreObj;
 }

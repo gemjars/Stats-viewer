@@ -412,13 +412,6 @@ main {
   width: 56px;
 }
 
-.mode-losses-readout {
-  display: block;
-  margin-top: 4px;
-  font-size: 11px;
-  color: var(--text-dim);
-}
-
 .btn-remove-match {
   background: none;
   border: none;
@@ -762,103 +755,6 @@ table.compare-table td.key-facts-cell { white-space: pre-line; }
 
 .btn-save-image {
   margin: 6px 0 2px;
-}
-
-/* Offscreen A4-shaped layout rasterized by html2canvas for the "Save as Image" export. */
-.export-page {
-  background: #ffffff;
-  color: var(--text);
-  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
-  box-sizing: border-box;
-  padding: 70px 60px;
-  display: flex;
-  flex-direction: column;
-}
-
-.export-header {
-  text-align: center;
-  margin-bottom: 30px;
-}
-
-.export-header h1 {
-  font-size: 54px;
-  margin: 0 0 10px;
-}
-
-.export-pronouns {
-  font-size: 26px;
-  color: var(--text-dim);
-  font-weight: normal;
-}
-
-.export-info-line {
-  font-size: 24px;
-  color: var(--text-dim);
-  margin-top: 6px;
-}
-
-.export-wheel-row {
-  display: flex;
-  justify-content: center;
-  gap: 50px;
-  margin-bottom: 40px;
-}
-
-.export-wheel-col {
-  flex: 1;
-  max-width: 540px;
-  text-align: center;
-}
-
-.export-wheel-col h2 {
-  font-size: 30px;
-  margin: 0 0 6px;
-}
-
-.export-stat-line {
-  font-size: 28px;
-  font-weight: 700;
-  margin-bottom: 6px;
-}
-
-.export-wheel-col .wheel-svg {
-  width: 100%;
-  max-width: 520px;
-}
-
-.export-wheel-col .dnp-placeholder {
-  min-height: 400px;
-  font-size: 22px;
-}
-
-.export-match-section { margin-bottom: 40px; }
-
-.export-match-section h2 {
-  font-size: 30px;
-  text-align: center;
-  margin: 0 0 16px;
-}
-
-.export-page .compare-match-item {
-  font-size: 24px;
-  padding: 14px 18px;
-  margin-bottom: 10px;
-}
-
-.export-page .mode-breakdown { font-size: 20px; }
-
-.export-footer {
-  margin-top: auto;
-  text-align: center;
-  padding-top: 24px;
-  border-top: 2px solid var(--border);
-}
-
-.export-footer .info-keyfacts {
-  font-size: 32px;
-  font-weight: 700;
-  color: var(--text);
-  white-space: pre-line;
 }
 
 /* Scale text up further on large screens/monitors for clearer reading from a distance. */
