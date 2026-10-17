@@ -49,18 +49,18 @@ function buildMatchHistoryItemsHtml(matches) {
           : m.overallScore.you < m.overallScore.opponent
             ? "match-loss"
             : "";
-      const modeBreakdown = CHAMPS_MODES.filter((mode) => {
-        const s = normalizeModeScore(m.modeScores[mode]);
+      const modeBreakdown = MATCH_MODES.filter((mode) => {
+        const s = matchModeScore(m, mode);
         return s.wins !== 0 || s.losses !== 0;
       })
         .map((mode) => {
-          const s = normalizeModeScore(m.modeScores[mode]);
+          const s = matchModeScore(m, mode);
           return `${MODE_LABELS[mode]}${s.picked ? ' <span class="pick-tag">Pick</span>' : ""} ${s.wins}-${s.losses}`;
         })
         .join(" · ");
       return `
           <div class="compare-match-item ${resultClass}">
-            <div class="vs-line"><span>vs ${escapeHtml(oppName)}${m.round ? ` <span class="match-round-tag">${escapeHtml(m.round)}</span>` : ""}</span><span>${m.overallScore.you}-${m.overallScore.opponent}</span></div>
+            <div class="vs-line"><span>vs ${escapeHtml(oppName)}${m.round ? ` <span class="match-round-tag">${escapeHtml(m.round)}</span>` : ""}${m.champs2 ? ` <span class="champs2-tag">Champs 2</span>` : ""}</span><span>${m.overallScore.you}-${m.overallScore.opponent}</span></div>
             ${modeBreakdown ? `<div class="mode-breakdown">${modeBreakdown}</div>` : ""}
           </div>
         `;
@@ -619,6 +619,7 @@ function exportPlayerImage(player) {
       ctx.fillStyle = "#1a2130";
       let vsLine = `vs ${oppName}`;
       if (m.round) vsLine += `  (${m.round})`;
+      if (m.champs2) vsLine += "  [Champs 2]";
       ctx.fillText(vsLine, marginX + 14, matchY);
       ctx.textAlign = "right";
       ctx.fillText(
@@ -628,12 +629,12 @@ function exportPlayerImage(player) {
       );
       ctx.textAlign = "left";
 
-      const breakdown = CHAMPS_MODES.filter((mode) => {
-        const s = normalizeModeScore(m.modeScores[mode]);
+      const breakdown = MATCH_MODES.filter((mode) => {
+        const s = matchModeScore(m, mode);
         return s.wins !== 0 || s.losses !== 0;
       })
         .map((mode) => {
-          const s = normalizeModeScore(m.modeScores[mode]);
+          const s = matchModeScore(m, mode);
           const pick = s.picked ? " [Pick]" : "";
           return `${modeLabelPlain(mode)}${pick} ${s.wins}-${s.losses}`;
         })

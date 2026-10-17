@@ -11,6 +11,10 @@ const QUALI_MODES = [
   "DiaPot",
 ];
 
+// Modes selectable per match in a player's match history - Champs 1's modes
+// plus the qualifying-only modes, since a match can be played in any of them.
+const MATCH_MODES = CHAMPS_MODES.concat(["Crystal", "DiaPot"]);
+
 const MODE_LABELS = {
   UHC: "UHC",
   Sword: "Sword",
@@ -84,6 +88,16 @@ function normalizeModeScore(scoreObj) {
   return scoreObj;
 }
 
+// Matches saved before Crystal/DiaPot were added to MATCH_MODES won't have
+// those keys in modeScores - back-fill a blank entry so they can be read
+// and edited like any other mode.
+function matchModeScore(match, mode) {
+  if (!match.modeScores[mode]) {
+    match.modeScores[mode] = { wins: 0, losses: 0, picked: false };
+  }
+  return normalizeModeScore(match.modeScores[mode]);
+}
+
 // Champs 1 mode totals are entered as "games played" + "games won" too. Old
 // saved data used "wins"/"losses" - back-fill played/won for old players.
 function normalizeModeStat(statObj) {
@@ -112,8 +126,9 @@ function createEmptyMatch() {
     id: uuid(),
     opponentName: "",
     round: "",
+    champs2: false,
     overallScore: { you: 0, opponent: 0 },
-    modeScores: emptyModeScores(CHAMPS_MODES),
+    modeScores: emptyModeScores(MATCH_MODES),
   };
 }
 

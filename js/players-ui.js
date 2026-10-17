@@ -170,11 +170,15 @@ function renderMatchesList() {
           <span>-</span>
           <input type="number" min="0" class="match-overall" data-match-id="${match.id}" data-side="opponent" value="${match.overallScore.opponent}" title="Opponent score">
         </div>
+        <label class="pick-checkbox match-champs2-label">
+          <input type="checkbox" class="match-champs2" data-match-id="${match.id}" ${match.champs2 ? "checked" : ""}>
+          Champs 2
+        </label>
         <button type="button" class="btn-remove-match" data-idx="${idx}">Remove</button>
       </div>
       <div class="match-modes-grid">
-        ${CHAMPS_MODES.map((mode) => {
-          const scores = normalizeModeScore(match.modeScores[mode]);
+        ${MATCH_MODES.map((mode) => {
+          const scores = matchModeScore(match, mode);
           return `
           <div>
             <span class="mode-score-label">${MODE_LABELS[mode]}</span>
@@ -221,6 +225,13 @@ function renderMatchesList() {
     });
     input.addEventListener("blur", () => {
       if (input.value === "") input.value = "0";
+    });
+  });
+
+  container.querySelectorAll(".match-champs2").forEach((cb) => {
+    cb.addEventListener("change", () => {
+      const match = matches.find((m) => m.id === cb.dataset.matchId);
+      match.champs2 = cb.checked;
     });
   });
 
